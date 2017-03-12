@@ -23,6 +23,7 @@ import java.awt.Color;
 public class Window {
 	protected Rectangle2D rect;//小方块
 	protected double y;
+	protected double y_highest;//最高位置
 	protected double y_v;//初速度
 	protected double y_a;//加速度
 	protected double random_monster_time;//随机怪物触发时间
@@ -43,6 +44,7 @@ public class Window {
 	protected boolean isNight;//白天黑夜
 	protected boolean isBird;//飞鸟标记
 	protected boolean isCheat;//作弊标记
+	protected boolean isLongJump;//跳高标记
 	protected int score;//成绩
 	protected int high_score;//最高成绩
 	protected int cheat_score;//作弊碰撞成绩
@@ -79,6 +81,7 @@ public class Window {
 		default_color = Color.GRAY;
 		isCheat = false;
 		high_score = 0;
+		isLongJump = false;
 		initial();
 		
 		tl = new TimerListener();
@@ -131,6 +134,7 @@ public class Window {
 	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	        rect = new Rectangle2D.Double(75, y, width, height);
 	        Line2D line = new Line2D.Double(0,285,750,285);
+	        Line2D highest_line = new Line2D.Double(0,285,750,285);
 	        if(isNight == true && isCheat == false) default_color = Color.LIGHT_GRAY; else default_color = Color.GRAY;
 	        if(isCheat == true) {
 	        	if(which_cheat == false)
@@ -159,7 +163,12 @@ public class Window {
 	        if(isGameOver) g2.drawString("Game Over", 20, 50);
 	        g2.setFont(new Font("SansSerif", Font.BOLD, 16));
 	        g2.drawString("HI  " + transform(high_score) + "  " + transform(score), 600, 45);
-	        if(isCheat) g2.drawString("CHEAT  " + transform(cheat_score), 600, 65);
+	        if(isCheat) {
+	        	g2.drawString("CHEAT  " + transform(cheat_score), 600, 65);
+	        	highest_line.setLine(0, y_highest, 750, y_highest);
+	        	g2.draw(highest_line);
+	        	g2.drawString("Hi: " + (285 - y_highest) + " Speed: " + speed, 0, (int) y_highest);
+	        }
 		}
 		private String transform(Integer arg0) {
 			String tmp = arg0.toString();
@@ -332,14 +341,16 @@ public class Window {
 	        if(keyCode == KeyEvent.VK_SPACE) {
 	        	if(isGameOver == false) {
 	        		if(isStart == true) {
-	        			if(isPause == false)
+	        			if(isPause == false) {
 	        				if(tflag == false) {
 				        		tflag = true;
 				        		flag = false;
 				        		y_v = 11;// * speed;
-				        		y_a = y_v * y_v / 200;
+				        		y_a = y_v * y_v / 120;
 				        		jump_timer.start();
+				        		isLongJump = true;
 				        	}
+	        			}
 		        	}
 		        	else {
 		        		isStart = true;
@@ -381,7 +392,11 @@ public class Window {
 		@Override
 		public void keyReleased(KeyEvent arg0) {
 			// TODO Auto-generated method stub
-
+			int keyCode = arg0.getKeyCode();
+			if(keyCode == KeyEvent.VK_SPACE) {
+				isLongJump = false;
+//				System.out.println("LongJumpStop");
+			}
 		}
 
 		@Override
@@ -399,11 +414,13 @@ public class Window {
 			// TODO Auto-generated method stub
 			if(arg0.getSource() == jump_timer) {
 				if(flag == false) {
+					if(isLongJump && y_a > 0.45) y_a -= 0.08;
 					y -= y_v;
 					y_v -= y_a;
 					if(y_v<0) {
 						flag = true;
 						y_v = 0;
+						y_highest = y;//最高位记录
 					}
 				}
 				else {
@@ -426,7 +443,7 @@ public class Window {
 					day2night_timer.start();
 				}
 				if(score%200==0 && speed < 2.5) {
-					speed += 0.1;
+					speed += 0.1;//提速
 				}
 				panel.repaint();
 			}
