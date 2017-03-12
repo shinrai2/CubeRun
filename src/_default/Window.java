@@ -21,7 +21,7 @@ import java.awt.Color;
 
 
 public class Window {
-	protected Rectangle2D rect;
+	protected Rectangle2D rect;//小方块
 	protected double y;
 	protected double y_v;//初速度
 	protected double y_a;//加速度
@@ -30,22 +30,22 @@ public class Window {
 	protected double random_ground_time;//随机地面触发时间
 	protected JPanel panel;
 	protected TimerListener tl;//时钟Listener
-	protected Timer timer;//跳跃时钟
-	protected Timer timer2;//计分时钟
-	protected Timer timer3;//夜转时钟
-	protected Timer timer4;//怪物时钟、云朵时钟
+	protected Timer jump_timer;//跳跃时钟
+	protected Timer score_timer;//计分时钟
+	protected Timer day2night_timer;//夜转时钟
+	protected Timer monster_timer;//怪物时钟、云朵时钟
 	protected boolean flag;//跳跃最高点标记
 	protected boolean tflag;//跳开始的标记，防止二重跳
 	private JFrame frame;
-	protected boolean isStart;
-	protected boolean isPause;
-	protected boolean isGameOver;
+	protected boolean isStart;//是否已经开始
+	protected boolean isPause;//是否暂停
+	protected boolean isGameOver;//是否结束游戏
 	protected boolean isNight;//白天黑夜
 	protected boolean isBird;//飞鸟标记
 	protected boolean isCheat;//作弊标记
 	protected int score;//成绩
 	protected int high_score;//最高成绩
-	protected int cheat_score;//
+	protected int cheat_score;//作弊碰撞成绩
 	protected double speed;//游戏速度
 	protected Color default_color;//默认颜色
 
@@ -78,24 +78,14 @@ public class Window {
 	private void initialize() {
 		default_color = Color.GRAY;
 		isCheat = false;
-		random_monster_time = Math.random()*500 + 500;
-		random_cloud_time = Math.random()*300 + 280;
-		random_ground_time = Math.random()*20 + 50;
-		isBird = false;
-		speed = 1;//地面速度，云相对低，鸟相对高
-		score = 0;
 		high_score = 0;
-		cheat_score = 0;
-		isNight = false;
-		isStart = false;
-		isPause = false;
-		isGameOver = false;
-		tflag = false;
+		initial();
+		
 		tl = new TimerListener();
-		timer = new Timer(10,tl);
-		timer2 = new Timer(85,tl);
-		timer3 = new Timer(5,tl);
-		timer4 = new Timer(1,tl);
+		jump_timer = new Timer(10,tl);
+		score_timer = new Timer(85,tl);
+		day2night_timer = new Timer(5,tl);
+		monster_timer = new Timer(1,tl);
 		frame = new JFrame();
 		frame.setBounds(100, 100, 750, 400);
 		frame.setResizable(false);
@@ -103,10 +93,31 @@ public class Window {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.addKeyListener(new MyKeyListener());
 		
-        y = 230;
 		panel = new MyPanel();
 		frame.getContentPane().add(panel, BorderLayout.CENTER);
 		panel.setBackground(Color.WHITE); 
+	}
+	//初始化重复部分
+	public void initial() {
+		//初始化
+		isGameOver = false;
+		isStart = false;
+		score = 0;
+		cheat_score = 0;
+		
+		random_monster_time = Math.random()*500 + 500;
+		random_cloud_time = Math.random()*300 + 280;
+		random_ground_time = Math.random()*20 + 50;
+		speed = 1;//地面速度，云相对低，鸟相对高
+		
+		isBird = false;
+		isNight = false;
+		
+		isPause = false;
+		
+		tflag = false;
+		
+		y = 230;
 	}
 	
 	class MyPanel extends JPanel{
@@ -257,9 +268,9 @@ public class Window {
 							(rect_Right>=monster_Left && rect_Right<=monster_Right && fix_bird3>=monster_Top && fix_bird3<=monster_Bottom)) {//
 						if (!isCheat) {
 							isGameOver = true;
-							timer.stop();
-							timer2.stop();
-							timer4.stop();
+							jump_timer.stop();
+							score_timer.stop();
+							monster_timer.stop();
 						}
 						else {
 							//更改颜色
@@ -328,36 +339,22 @@ public class Window {
 				        		flag = false;
 				        		y_v = 11;// * speed;
 				        		y_a = y_v * y_v / 200;
-					        	timer.start();
+				        		jump_timer.start();
 				        	}
 		        	}
 		        	else {
 		        		isStart = true;
 		        		panel.repaint();
 		        		// 开始游戏，计分
-		        		timer2.start();
-		        		timer4.start();
+		        		score_timer.start();
+		        		monster_timer.start();
 		        	}
 	        	}
 	        	else {
 	        		//重新开始游戏，初始化
-	        		isGameOver = false;
-	        		isStart = false;
-	        		score = 0;
-	        		cheat_score = 0;
+	        		initial();
 	        		
-	        		random_monster_time = Math.random()*500 + 500;
-	        		random_cloud_time = Math.random()*300 + 280;
-	        		random_ground_time = Math.random()*20 + 50;
-	        		speed = 1;//地面速度，云相对低，鸟相对高
-	        		
-	        		isBird = false;
-	        		isNight = false;
-	        		
-	        		isPause = false;
-	        		
-	        		tflag = false;
-	        		timer3.start();//日夜转换启动
+	        		day2night_timer.start();//日夜转换启动
 	        		((MyPanel) panel).thing_init();
 	        		y = 230;
 	        	}
@@ -367,16 +364,16 @@ public class Window {
 	        		if(isPause == false) {
 		        		isPause = true;
 		        		panel.repaint();
-		        		timer.stop();
-		        		timer2.stop();
-		        		timer4.stop();
+		        		jump_timer.stop();
+		        		score_timer.stop();
+		        		monster_timer.stop();
 		        	}
 		        	else {
 		        		isPause = false;
 		        		panel.repaint();
-		        		timer.start();
-		        		timer2.start();
-		        		timer4.start();
+		        		jump_timer.start();
+		        		score_timer.start();
+		        		monster_timer.start();
 		        	}
 	        	}
 	        }
@@ -401,7 +398,7 @@ public class Window {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			// TODO Auto-generated method stub
-			if(arg0.getSource() == timer) {
+			if(arg0.getSource() == jump_timer) {
 				if(flag == false) {
 					y -= y_v;
 					y_v -= y_a;
@@ -415,26 +412,26 @@ public class Window {
 					y_v += y_a; 
 					if (y >= 229.8) {
 						y = 230;
-						timer.stop();
+						jump_timer.stop();
 						tflag = false;
 					}
 				}
 				panel.repaint();
 			}
-			if(arg0.getSource() == timer2) {
+			if(arg0.getSource() == score_timer) {
 				score++;
 				if(score > high_score) high_score = score;
 				if(score > 300) isBird = true;//300分后启动飞鸟
 				if(score%500==0) {
 					isNight = !isNight;
-					timer3.start();
+					day2night_timer.start();
 				}
 				if(score%200==0 && speed < 2.5) {
 					speed += 0.1;
 				}
 				panel.repaint();
 			}
-			if(arg0.getSource() == timer3) {
+			if(arg0.getSource() == day2night_timer) {
 				int r = panel.getBackground().getRed();
 	        	int g = panel.getBackground().getGreen();
 	        	int b = panel.getBackground().getBlue();
@@ -443,19 +440,20 @@ public class Window {
 	        		if(r>0 && g>0 && b>0) {
 		        		panel.setBackground(new Color(r-5,b-5,g-5));
 		        	}
-	        		else timer3.stop();
+	        		else day2night_timer.stop();
 	        	}
 	        	else {
 	        		//night to day
 	        		if(r<255 && g<255 && b<255) {
 		        		panel.setBackground(new Color(r+5,b+5,g+5));
 		        	}
-	        		else timer3.stop();
+	        		else day2night_timer.stop();
 	        	}
 	        	
 				panel.repaint();
 			}
-			if(arg0.getSource() == timer4) {
+			//移动，随机触发
+			if(arg0.getSource() == monster_timer) {
 				((MyPanel) panel).monster_move();
 				((MyPanel) panel).cloud_move();
 				((MyPanel) panel).ground_move();
