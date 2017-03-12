@@ -104,26 +104,21 @@ public class Window {
 		isStart = false;
 		score = 0;
 		cheat_score = 0;
-		
 		random_monster_time = Math.random()*500 + 500;
 		random_cloud_time = Math.random()*300 + 280;
 		random_ground_time = Math.random()*20 + 50;
 		speed = 1;//地面速度，云相对低，鸟相对高
-		
 		isBird = false;
 		isNight = false;
-		
 		isPause = false;
-		
 		tflag = false;
-		
 		y = 230;
 	}
 	
 	class MyPanel extends JPanel{
 		private Rectangle2D[] monster;
 		private Rectangle2D[] cloud;
-		private int which_cheat;
+		private boolean which_cheat;
 		private Line2D[] ground;
 		
 		@Override
@@ -138,7 +133,7 @@ public class Window {
 	        Line2D line = new Line2D.Double(0,285,750,285);
 	        if(isNight == true && isCheat == false) default_color = Color.LIGHT_GRAY; else default_color = Color.GRAY;
 	        if(isCheat == true) {
-	        	if(which_cheat == 0)
+	        	if(which_cheat == false)
 	        		default_color = Color.ORANGE;
 	        	else default_color = Color.RED;
 	        }
@@ -149,7 +144,7 @@ public class Window {
 	        	g2.draw(monster[i]);
 	        	g2.fill(monster[i]);
 			}
-	        for (int i=0;i<50;i++) {
+	        for (int i=0;i<40;i++) {
 	        	g2.draw(ground[i]);
 	        }
 	        
@@ -177,13 +172,13 @@ public class Window {
 			super();
 			monster = new Rectangle2D[4];
 			cloud = new Rectangle2D[4];
-			ground = new Line2D[50];
-			which_cheat = 0;
+			ground = new Line2D[40];
+			which_cheat = false;
 			for (int i=0;i<4;i++) {
 				monster[i] = new Rectangle2D.Double(800, 450, 55, 60);
 				cloud[i] = new Rectangle2D.Double(800, 450, 65, 30);
 			}
-			for (int i=0;i<50;i++) {
+			for (int i=0;i<40;i++) {
 				double x1 = Math.random()*750;
 				double x2 = x1 + Math.random()*8 + 2;
 				double y = Math.random()*13 + 293;
@@ -193,11 +188,15 @@ public class Window {
 					ground[i] = new Line2D.Double(800,450,803,450);
 			}
 		}
+		//GameOver Cheat刷新
+		public void reflesh_cheat() {
+			which_cheat = false;
+		}
 		//地面触发
 		public void ground_touch() {
 			double w = Math.random()*8 + 2;
 			double y = Math.random()*13 + 293;
-			for (int i=0;i<50;i++) {
+			for (int i=0;i<40;i++) {
 				if(ground[i].getX1()>760) {
 					ground[i].setLine(750, y, 750 + w, y);
 					break;
@@ -274,15 +273,15 @@ public class Window {
 						}
 						else {
 							//更改颜色
-							if(which_cheat == 0) cheat_score++;
-							which_cheat = 1;
+							if(which_cheat == false) cheat_score++;
+							which_cheat = true;
 						}
 					}
 					//
 				}
 				else if(monster[i].getX() < 0) {//回收
 					monster[i].setRect(800, 450, 55, 60);
-					if(isCheat) which_cheat = 0;
+					if(isCheat) which_cheat = false;
 				}
 			}
 			panel.repaint();
@@ -300,7 +299,7 @@ public class Window {
 		}
 		//地面移动
 		public void ground_move() {
-			for (int i=0;i<50;i++) {
+			for (int i=0;i<40;i++) {
 				if(ground[i].getX1()<760 && ground[i].getX2()>=0) {
 					ground[i].setLine(ground[i].getX1()- 1*speed, ground[i].getY1(), ground[i].getX2()- 1*speed, ground[i].getY2());
 				}
@@ -353,7 +352,7 @@ public class Window {
 	        	else {
 	        		//重新开始游戏，初始化
 	        		initial();
-	        		
+	        		((MyPanel) panel).reflesh_cheat();
 	        		day2night_timer.start();//日夜转换启动
 	        		((MyPanel) panel).thing_init();
 	        		y = 230;
