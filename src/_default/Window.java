@@ -475,7 +475,7 @@ public class Window {
 				((MyPanel) panel).ground_move();
 				if(random_monster_time <= 0) {
 					((MyPanel) panel).monster_touch();
-					random_monster_time = Math.random()*550 + 150 + 150/speed;
+					random_monster_time = Math.random()*550 + 163 + 150/speed;
 				}
 				else {
 					random_monster_time--;
