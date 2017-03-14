@@ -502,13 +502,18 @@ public class Window {
 		}	
 	}
 	public void playSound() {
-		try {
-			FileInputStream filewav = new  FileInputStream("music/sound.wav");
-			AudioStream as = new AudioStream(filewav);
-			AudioPlayer.player.start(as);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					FileInputStream filewav = new  FileInputStream("music/sound.wav");
+					AudioStream as = new AudioStream(filewav);
+					AudioPlayer.player.start(as);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 }
