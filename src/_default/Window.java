@@ -12,6 +12,9 @@ import java.awt.event.KeyListener;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 
+import sun.audio.*;
+import java.io.*;
+import javax.annotation.Generated;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -436,6 +439,7 @@ public class Window {
 			}
 			if(arg0.getSource() == score_timer) {
 				score++;
+				if ((score+3)%100 == 0) playSound();
 				if(score > high_score) high_score = score;
 				if(score > 300) isBird = true;//300·ÖºóÆô¶¯·ÉÄñ
 				if(score%500==0) {
@@ -495,7 +499,16 @@ public class Window {
 					random_ground_time--;
 				}
 			}
+		}	
+	}
+	public void playSound() {
+		try {
+			FileInputStream filewav = new  FileInputStream("music/sound.wav");
+			AudioStream as = new AudioStream(filewav);
+			AudioPlayer.player.start(as);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
 	}
 }
